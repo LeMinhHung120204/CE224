@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+</head>
+<body>
+    <h1>Admin Panel</h1>
+    <form method="POST" action="/admin">
+        <label for="station">Station Name:</label>
+        <input type="text" name="station" id="station" required>
+        <br>
+        <label for="humidity">Humidity:</label>
+        <input type="text" name="humidity" id="humidity">
+        <br>
+        <label for="temperature">Temperature:</label>
+        <input type="text" name="temperature" id="temperature">
+        <br>
+        <label for="rainLevel">Rain Level:</label>
+        <input type="text" name="rainLevel" id="rainLevel">
+        <br>
+        <label for="rainMessage">Rain Status:</label>
+        <input type="text" name="rainMessage" id="rainMessage">
+        <br>
+        <label for="pressure">Pressure:</label>
+        <input type="text" name="pressure" id="pressure">
+        <br>
+        <label for="accelX">Accel X:</label>
+        <input type="text" name="accelX" id="accelX">
+        <br>
+        <label for="accelY">Accel Y:</label>
+        <input type="text" name="accelY" id="accelY">
+        <br>
+        <label for="accelZ">Accel Z:</label>
+        <input type="text" name="accelZ" id="accelZ">
+        <br>
+        <button type="submit">Update Station</button>
+    </form>
+
+    <h2>Current Station Data:</h2>
+    <pre>{{ station_data }}</pre>
+
+    <a href="/logout">Logout</a>
+</body>
+</html>

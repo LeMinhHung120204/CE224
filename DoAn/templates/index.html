@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Monitoring Station</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>Navigation</h2>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/chart">Chart</a></li>
+            <li><a href="/analysis">Analysis</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1>Weather Monitoring Station</h1>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Station</th>
+                        <th>Light Intensity (lux)</th>
+                        <th>Rain Level (mm)</th>
+                        <th>Temperature (°C)</th>
+                        <th>Humidity (%)</th>
+                        <th>Pressure (hPa)</th>
+                        <th>Wind Speed (km/h)</th>
+                        <th>Wind Direction</th>
+                        <th>Rain Flow Rate (L/min)</th>
+                    </tr>
+                </thead>
+                <tbody id="station-table-body">
+                    <!-- Data will be dynamically populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Mock data for multiple stations
+            const stations = [];
+            for (let i = 1; i <= 100; i++) {
+                stations.push({
+                    name: `Station ${i}`,
+                    lightIntensity: Math.floor(Math.random() * 2000),
+                    rainLevel: Math.floor(Math.random() * 100),
+                    temperature: (Math.random() * 10 + 20).toFixed(1),
+                    humidity: Math.floor(Math.random() * 100),
+                    pressure: Math.floor(Math.random() * 50 + 1000),
+                    windSpeed: Math.floor(Math.random() * 30),
+                    windDirection: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.floor(Math.random() * 8)],
+                    rainFlowRate: Math.floor(Math.random() * 50)
+                });
+            }
+
+            const tableBody = document.getElementById("station-table-body");
+
+            // Populate the table
+            stations.forEach(station => {
+                const row = `
+                    <tr>
+                        <td>${station.name}</td>
+                        <td>${station.lightIntensity}</td>
+                        <td>${station.rainLevel}</td>
+                        <td>${station.temperature}</td>
+                        <td>${station.humidity}</td>
+                        <td>${station.pressure}</td>
+                        <td>${station.windSpeed}</td>
+                        <td>${station.windDirection}</td>
+                        <td>${station.rainFlowRate}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        });
+    </script>
+</body>
+
+</html>
