@@ -97,23 +97,18 @@
 
             // Fetch the chart data for the selected station and date range
             fetch(`/chart?station=${selectedStation}&start=${startDate}&end=${endDate}`)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        console.log('Here');
-        // Cập nhật hình ảnh
-        document.getElementById("chart-light-intensity").src = '../static/charts/lightIntensity.png';
-        document.getElementById("chart-rain-level").src = '../static/charts/rainLevel.png';
-        document.getElementById("chart-temperature").src = '../static/charts/temperature.png';
-        document.getElementById("chart-humidity").src = '../static/charts/humidity.png';
-        document.getElementById("chart-pressure").src = '../static/charts/pressure.png';
-        document.getElementById("chart-wind-speed").src = '../static/charts/windSpeed.png';
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-
+                .then(response => {
+                    console.log('Here')
+                    document.getElementById("chart-light-intensity").src = '../static/charts/lightIntensity.png';
+                    document.getElementById("chart-rain-level").src = '../static/charts/rainLevel.png';
+                    document.getElementById("chart-temperature").src = '../static/charts/temperature.png';
+                    document.getElementById("chart-humidity").src = '../static/charts/humidity.png';
+                    document.getElementById("chart-pressure").src = '../static/charts/pressure.png';
+                    document.getElementById("chart-wind-speed").src = '../static/charts/windSpeed.png';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         }
     </script>
 </body>
