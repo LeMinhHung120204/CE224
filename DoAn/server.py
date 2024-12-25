@@ -2,14 +2,12 @@ import paho.mqtt.client as mqtt
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
 import json
-import base64
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
 import openai  # Import OpenAI library
-import numpy as np 
 import pandas as pd
 import os
 import glob

@@ -118,22 +118,6 @@ tr:nth-child(even) {
   }
 }
 
-@media screen and (max-width: 480px) {
-  /* For very small screens (e.g., phones in portrait mode) */
-  h1 {
-    font-size: 1.2rem; /* Even smaller font size */
-  }
-
-  .sidebar {
-    width: 150px; /* Further reduce sidebar width */
-  }
-
-  .main-content {
-    margin-left: 0; /* Remove left margin */
-    padding: 10px; /* Smaller padding */
-  }
-}
-
 /* Dropdown and date range styling */
 .filters-container {
   text-align: center;
