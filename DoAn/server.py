@@ -3,6 +3,8 @@ from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
 import json
 import base64
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
@@ -10,6 +12,7 @@ import openai  # Import OpenAI library
 import numpy as np 
 import pandas as pd
 import os
+import glob
 
 # Initialize Flask and SocketIO
 app = Flask(__name__)
@@ -28,6 +31,7 @@ data = {
     "rainFlowRate": [],
     "month_data": []  # Placeholder for monthly data
 }
+df = None
 
 # MQTT Broker configuration
 MQTT_BROKER = "localhost"
@@ -88,9 +92,19 @@ def chart():
     start_date = request.args.get('start')
     end_date = request.args.get('end')
 
+    print(station_id, start_date, end_date)
     # Nếu không có tham số, trả về JSON trống
+    # Xóa các file trong thư mục static/charts
+    save_path = "static/charts"
+    if os.path.exists(save_path):
+        files = glob.glob(os.path.join(save_path, "*.png"))
+        for file in files:
+            os.remove(file)  # Xóa từng file .png
     if not station_id or not start_date or not end_date:
-        return render_template('chart.html', charts={})
+        return render_template('chart.html')
+    station_id = station_id.split(' ')[1]
+    data = df[df['name'] == int(station_id)].to_dict()
+    print(station_id)
 
     # Nếu có tham số, xử lý logic để tạo biểu đồ
     features = ["lightIntensity", "rainLevel", "temperature", "humidity", 
@@ -125,16 +139,21 @@ def chart():
             img = io.BytesIO()
             fig.savefig(img, format='png')
             img.seek(0)
-            charts[feature] = base64.b64encode(img.getvalue()).decode('utf-8')
+            # charts[feature] = base64.b64encode(img.getvalue()).decode('utf-8')
 
-            plt.close(fig)  # Giải phóng bộ nhớ
-
+            #plt.close(fig)  # Giải phóng bộ nhớ
+    print('ábd')
     # Trả về dữ liệu JSON và lưu biểu đồ
-    return render_template('chart.html', charts=charts)
+    return render_template('chart.html')
 
     # return jsonify(charts), 200
 
-
+@app.after_request
+def add_no_cache_headers(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 # Add your OpenAI API key
 openai.api_key = ""
@@ -209,7 +228,4 @@ def receive_data():
 
 if __name__ == "__main__":
     df = pd.read_csv("weather.csv", delimiter=",")
-    data = df.to_dict()
-    print(data["month_data"])
-    # print(df.columns)
     socketio.run(app, debug=True, host="0.0.0.0", port=8000)

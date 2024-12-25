@@ -81,11 +81,6 @@
                 <h3>Wind Speed (km/h)</h3>
                 <img id="chart-wind-speed" src="data:image/png;base64,{{ chart_data }}" alt="Wind Speed Chart">
             </div>
-
-            <!-- <div class="chart-container">
-                <h3>Wind Direction</h3>
-                <img id="chart-wind-direction" src="data:image/png;base64,{{ chart_data }}" alt="Wind Direction Chart">
-            </div> -->
     </div>
 
     <script>
@@ -102,18 +97,23 @@
 
             // Fetch the chart data for the selected station and date range
             fetch(`/chart?station=${selectedStation}&start=${startDate}&end=${endDate}`)
-                .then(response => {
-                    console.log('Here')
-                    document.getElementById("chart-light-intensity").src = '../static/charts/lightIntensity.png';
-                    document.getElementById("chart-rain-level").src = '../static/charts/rainLevel.png';
-                    document.getElementById("chart-temperature").src = '../static/charts/temperature.png';
-                    document.getElementById("chart-humidity").src = '../static/charts/humidity.png';
-                    document.getElementById("chart-pressure").src = '../static/charts/pressure.png';
-                    document.getElementById("chart-wind-speed").src = '../static/charts/windSpeed.png';
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        console.log('Here');
+        // Cập nhật hình ảnh
+        document.getElementById("chart-light-intensity").src = '../static/charts/lightIntensity.png';
+        document.getElementById("chart-rain-level").src = '../static/charts/rainLevel.png';
+        document.getElementById("chart-temperature").src = '../static/charts/temperature.png';
+        document.getElementById("chart-humidity").src = '../static/charts/humidity.png';
+        document.getElementById("chart-pressure").src = '../static/charts/pressure.png';
+        document.getElementById("chart-wind-speed").src = '../static/charts/windSpeed.png';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
         }
     </script>
 </body>

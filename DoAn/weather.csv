@@ -1,3 +1,6 @@
 name,lightIntensity,rainLevel,temperature,humidity,pressure,windSpeed,windDirection,rainFlowRate,month_data
 1,1000,77,27.2,38,1001,6,SE,42,2024-12-2
+1,1100,75,28.0,36,1005,8,E,41,2024-12-3
+1,900,75,28.0,36,1005,8,E,41,2024-12-4
 2,1249,62,24.4,52,1035,14,SE,14,2024-12-6
+2,1249,62,24.4,52,1035,14,SE,14,2024-12-7
