@@ -5,7 +5,7 @@
   </a>
 </p>
 
-<h1 align="center"><b>Vi Xử Lý - Vi Điều Khiển - CE103 </b></h1>
+<h1 align="center"><b>Thiết kế hệ thống nhúng - CE224 </b></h1>
 
 # Thành viên nhóm
 | STT    | MSSV          | Họ và Tên              |Chức Vụ    | Github                                                  | Email                   |
