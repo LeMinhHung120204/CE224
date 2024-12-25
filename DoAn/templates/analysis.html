@@ -61,9 +61,9 @@
                         <button type="submit" class="btn btn-primary ms-3">Analyze</button>
                     </form>
                 </div>
-                <div id="analysisResults">
-                    <!-- Results (Table/Charts) will be displayed here -->
-                    <h4 class="mt-5">Results will appear here after selection...</h4>
+                <div id="analysisResults" class="mt-5">
+                    <h4>Analysis Results:</h4>
+                    <pre id="resultsContent">Loading...</pre>
                 </div>
             </div>
         </div>
@@ -76,11 +76,29 @@
         const currentYear = new Date().getFullYear();
 
         // Tạo danh sách các năm từ 2000 đến năm hiện tại
-        for (let year = 2000; year <= currentYear; year++) {
+        for (let year = currentYear; year >= 2000; year--) {
             const option = document.createElement("option");
             option.value = year; // Giá trị của mỗi option
             yearOptions.appendChild(option); // Thêm option vào datalist
         }
+
+        // Đọc nội dung file .txt từ máy chủ
+    fetch('../static/output_analysis.txt')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            console.log(response);
+            return response.text();
+        })
+        .then(data => {
+            // Hiển thị nội dung file trong thẻ <pre>
+            document.getElementById('resultsContent').textContent = data;
+        })
+        .catch(error => {
+            console.error('Error loading file:', error);
+            document.getElementById('resultsContent').textContent = 'Unable to load analysis results.';
+        });
     </script>
 </body>
 </html>

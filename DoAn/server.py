@@ -7,10 +7,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
-import openai  # Import OpenAI library
 import pandas as pd
 import os
 import glob
+import google.generativeai as genai
 
 # Initialize Flask and SocketIO
 app = Flask(__name__)
@@ -154,23 +154,30 @@ def add_no_cache_headers(response):
     return response
 
 # Trang phân tích dữ liệu
-@app.route('/analysis', methods=['GET', 'POST'])
+@app.route('/analysis')
 def analysis():
-    if request.method == 'POST':
-        month = request.form.get('month')
-        year = request.form.get('year')
-        year_only = request.form.get('yearOnly')
-        
-        # Phân tích theo tháng-năm
-        if month and year:
-            filtered_data = df[(df['month_data'].dt.month == int(month)) & 
-                               (df['month_data'].dt.year == int(year))]
-        elif year_only:  # Phân tích theo năm
-            filtered_data = df[df['month_data'].dt.year == int(year_only)]
-        else:
-            filtered_data = pd.DataFrame()  # Không có kết quả
-        
-        return render_template('analysis.html', data=filtered_data.to_dict(orient='records'))
+    month = request.args.get('month')
+    year = request.args.get('year')
+    if month is None or year is None:
+        file_path = "static/output_analysis.txt"
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write('')
+        return render_template('analysis.html')
+    # Phân tích theo tháng-năm
+    if month == 'All Months':
+        temp = df[df['month_data'].str.contains(year)]
+    else:
+        temp = df[df['month_data'].str.contains(f"{year}-{month}")]
+    genai.configure(api_key="AIzaSyAm8V4F1i_oeF9PCfjwin0gUrfHcRxcV8Q")
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(f"Analyze the weather data of the station: {temp.to_string()}", )
+    print(response.text)
+
+        # Lưu nội dung trả về vào file .txt
+    output_text = response.text
+    file_path = "static/output_analysis.txt"
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(output_text)
     return render_template('analysis.html')
 
 
