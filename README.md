@@ -75,6 +75,8 @@ File dữ liệu phân tích được lưu tại thư mục static/output_analys
 
 Đảm bảo file requirements.txt được cập nhật đầy đủ trước khi cài đặt thư viện.
 
+# LICENSE
+[MIT](https://mit-license.org/)
 # Thông tin thêm
 
 Nếu bạn gặp vấn đề hoặc cần thêm thông tin, vui lòng liên hệ qua email (22520506@gmail.com) hỗ trợ của nhóm phát triển.
