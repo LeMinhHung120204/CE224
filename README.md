@@ -1,9 +1,29 @@
-# CE224
-Thiết kế trạm quan trắc môi trường
+<!-- Banner -->
+<p align="center">
+  <a href="https://www.uit.edu.vn/" title="Trường Đại học Công nghệ Thông tin" style="border: none;">
+    <img src="https://i.imgur.com/WmMnSRt.png" alt="Trường Đại học Công nghệ Thông tin | University of Information Technology">
+  </a>
+</p>
 
-Giới thiệu
+<h1 align="center"><b>Vi Xử Lý - Vi Điều Khiển - CE103 </b></h1>
 
-Dự án "Thiết kế trạm quan trắc môi trường" là một hệ thống giám sát môi trường, bao gồm giao diện web để hiển thị và phân tích dữ liệu từ các trạm quan trắc. Người dùng có thể xem dữ liệu biểu đồ, thực hiện phân tích theo tháng và năm, cũng như tải về kết quả phân tích.
+# Thành viên nhóm
+| STT    | MSSV          | Họ và Tên              |Chức Vụ    | Github                                                  | Email                   |
+| ------ |:-------------:| ----------------------:|----------:|--------------------------------------------------------:|-------------------------:
+| 1      | 22520980      | Phạm Anh Nguyên         |Nhóm trưởng|[Anhnguyen2708](https://github.com/Anhnguyen2708)  |22520980@gm.uit.edu.vn   |
+| 2      | 22520506      | Lê Minh Hùng        |Thành viên |[LeMinhHung120204](https://github.com/LeMinhHung120204)            |22520506@gm.uit.edu.vn   |
+| 3      | 22520830      | Văn Công Gia Luật        |Thành viên |[zalaw1610](https://github.com/zalaw1610)|22520830@gm.uit.edu.vn   |
+
+# GIỚI THIỆU MÔN HỌC
+* **Tên môn học:** Thiết kế hệ thống nhúng
+* **Mã môn học:** CE224
+* **Mã lớp:** CE224.P12
+* **Năm học:** HK1 (2024 - 2025)
+* **Giảng viên**: Nguyễn Duy Xuân Bách
+
+# ĐỒ ÁN CUỐI KÌ
+* **Đề tài:** Trạm quan trắc môi trường
+
 
 Hướng dẫn sử dụng
 
@@ -35,7 +55,7 @@ python server.py
 
 Sau khi server khởi động thành công, mở trình duyệt web và truy cập vào địa chỉ:
 
-http://127.0.0.1:5000
+http://192.168.1.134:8000/
 
 4. Chức năng chính
 
