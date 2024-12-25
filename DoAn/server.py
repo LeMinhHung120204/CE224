@@ -153,42 +153,26 @@ def add_no_cache_headers(response):
     response.headers['Expires'] = '0'
     return response
 
-# Add your OpenAI API key
-openai.api_key = ""
-
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    try:
-        request_data = request.get_json()
-        option = request_data.get('option', '')
-        custom_query = request_data.get('query', '')
-
-        # Predefined analysis prompts
-        prompts = {
-            "average_temperature": "Analyze the average temperature data for the selected station over the past month.",
-            "rain_trends": "Provide an analysis of the rainfall trends for the selected station.",
-            "wind_analysis": "Discuss the wind speed and direction trends for the selected station.",
-        }
-
-        # Choose the appropriate prompt
-        if option == "custom" and custom_query:
-            prompt = custom_query
+# Trang phân tích dữ liệu
+@app.route('/analysis', methods=['GET', 'POST'])
+def analysis():
+    if request.method == 'POST':
+        month = request.form.get('month')
+        year = request.form.get('year')
+        year_only = request.form.get('yearOnly')
+        
+        # Phân tích theo tháng-năm
+        if month and year:
+            filtered_data = df[(df['month_data'].dt.month == int(month)) & 
+                               (df['month_data'].dt.year == int(year))]
+        elif year_only:  # Phân tích theo năm
+            filtered_data = df[df['month_data'].dt.year == int(year_only)]
         else:
-            prompt = prompts.get(option, "Provide a general analysis of the station's data.")
+            filtered_data = pd.DataFrame()  # Không có kết quả
+        
+        return render_template('analysis.html', data=filtered_data.to_dict(orient='records'))
+    return render_template('analysis.html')
 
-        # Generate response using ChatGPT
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=200,
-            temperature=0.7,
-        )
-
-        result = response.choices[0].text.strip()
-        return jsonify({"result": result})
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": str(e)}), 500
 
 # API route to handle receiving data
 @app.route('/data', methods=['POST'])
