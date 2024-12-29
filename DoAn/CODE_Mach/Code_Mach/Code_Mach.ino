@@ -182,7 +182,7 @@ void loop() {
   rainFlowRate = rainPulses / PULSES_PER_ML; // Tính lưu lượng mưa (ml/s)
 
   // Gửi dữ liệu qua MQTT
-  client.publish("station", + "#")
+  client.publish("station", + "#");
   // 
   client.publish("station1/lightIntensity", String(lightIntensity).c_str());
   client.publish("station1/rainLevel", String(rainLevel).c_str());
