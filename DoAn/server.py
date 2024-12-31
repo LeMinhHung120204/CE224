@@ -107,36 +107,131 @@ def index():
     return render_template('index.html', data=data)
 
 # Trang biểu đồ
+# @app.route('/chart', methods=['GET'])
+# def chart():
+#     station_id = request.args.get('station')
+#     start_date = request.args.get('start')
+#     end_date = request.args.get('end')
+
+#     # Validate input
+#     if not station_id or not start_date or not end_date:
+#         return render_template('chart.html')
+
+#     station_id = station_id.split(' ')[1]  # Parse station name
+#     filtered_data = df[
+#         (df['name'] == int(station_id)) &
+#         (df['month_data'] >= start_date) &
+#         (df['month_data'] <= end_date)
+#     ]
+
+#     # Prepare and save charts
+#     features = ["lightIntensity", "rainLevel", "temperature", "humidity", 
+#                 "pressure", "windSpeed"]
+#     save_path = "static/charts"
+#     os.makedirs(save_path, exist_ok=True)  # Create folder if not exists
+
+#     chart_paths = {}
+#     for feature in features:
+#         if feature in filtered_data:
+#             labels = filtered_data["month_data"].tolist()
+#             values = filtered_data[feature].tolist()
+
+#             # Plot chart
+#             fig, ax = plt.subplots()
+#             ax.plot(labels, values, marker='o', label=feature, color='blue')
+#             ax.set_xlabel('Date')
+#             ax.set_ylabel(f'{feature} Value')
+#             ax.set_title(f'{feature} Over Time')
+#             ax.legend()
+#             ax.grid()
+
+#             # Save the chart to file
+#             file_name = f"{feature}.png"
+#             file_path = os.path.join(save_path, file_name)
+#             fig.savefig(file_path)
+#             plt.close(fig)  # Release memory
+
+#             chart_paths[feature] = file_name  # Add to response
+
+#     return jsonify(chart_paths), 200
 @app.route('/chart', methods=['GET'])
 def chart():
     station_id = request.args.get('station')
     start_date = request.args.get('start')
     end_date = request.args.get('end')
 
-    # Validate input
     if not station_id or not start_date or not end_date:
         return render_template('chart.html')
 
-    station_id = station_id.split(' ')[1]  # Parse station name
-    filtered_data = df[
-        (df['name'] == int(station_id)) &
-        (df['month_data'] >= start_date) &
-        (df['month_data'] <= end_date)
-    ]
+    # Handle potential missing space or unexpected format in station_id
+    if ' ' in station_id:
+        station_id = station_id.split(' ')[1]  # Parse station name
+    else:
+        # If no space is found, use the station_id as is (or handle appropriately)
+        pass
 
-    # Prepare and save charts
+    # Convert to datetime
+    start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
+    # Debugging output
+    print(f"Filtering data for station: {station_id}")
+    print(f"Start Date: {start_date}, End Date: {end_date}")
+
+    # Query for the station's data
+    station_data = WeatherData.query.filter(WeatherData.station_name == station_id).all()
+
+    if not station_data:
+        return jsonify({"error": "No data found for the selected station."}), 400
+
+    # Debugging: print the timestamps in the data
+    timestamps = [entry.timestamp for entry in station_data]
+    print(f"Available timestamps: {timestamps}")
+
+    # Filter data within the specified range
+    filtered_data = WeatherData.query.filter(
+        WeatherData.station_name == station_id,
+        WeatherData.timestamp >= start_date,
+        WeatherData.timestamp <= end_date
+    ).all()
+
+    if not filtered_data:
+        return jsonify({"error": "No data found for the selected date range."}), 400
+
+    # Process and return the charts as before
+    data_dict = [{
+        'timestamp': entry.timestamp,
+        'lightIntensity': entry.lightIntensity,
+        'rainLevel': entry.rainLevel,
+        'temperature': entry.temperature,
+        'humidity': entry.humidity,
+        'pressure': entry.pressure,
+        'windSpeed': entry.windSpeed,
+        'windDirection': entry.windDirection
+    } for entry in filtered_data]
+
+    station_df = pd.DataFrame(data_dict)
+
+    # Select 10 equally spaced time points within the date range
+    time_points = pd.date_range(start=start_date, end=end_date, periods=10)
+    filtered_data = station_df[station_df['timestamp'].isin(time_points)]
+
+    # Debugging: print filtered data
+    print(f"Filtered data: {filtered_data}")
+
+    # Create charts as before
     features = ["lightIntensity", "rainLevel", "temperature", "humidity", 
                 "pressure", "windSpeed"]
     save_path = "static/charts"
-    os.makedirs(save_path, exist_ok=True)  # Create folder if not exists
+    os.makedirs(save_path, exist_ok=True)
 
     chart_paths = {}
     for feature in features:
         if feature in filtered_data:
-            labels = filtered_data["month_data"].tolist()
+            labels = filtered_data["timestamp"].tolist()
             values = filtered_data[feature].tolist()
 
-            # Plot chart
+            # Generate chart
             fig, ax = plt.subplots()
             ax.plot(labels, values, marker='o', label=feature, color='blue')
             ax.set_xlabel('Date')
@@ -145,16 +240,15 @@ def chart():
             ax.legend()
             ax.grid()
 
-            # Save the chart to file
+            # Save chart image
             file_name = f"{feature}.png"
             file_path = os.path.join(save_path, file_name)
             fig.savefig(file_path)
-            plt.close(fig)  # Release memory
+            plt.close(fig)
 
-            chart_paths[feature] = file_name  # Add to response
+            chart_paths[feature] = file_name
 
     return jsonify(chart_paths), 200
-
 
 @app.after_request
 def add_no_cache_headers(response):
@@ -190,6 +284,27 @@ def analysis():
         file.write(output_text)
     return render_template('analysis.html')
 
+@app.route('/all_data')
+def all_data():
+    # Truy vấn tất cả dữ liệu từ bảng WeatherData
+    weather_data = WeatherData.query.all()
+
+    # Chuyển dữ liệu thành một danh sách dictionary để dễ hiển thị
+    data_dict = [{
+        'id': entry.id,
+        'station_name': entry.station_name,
+        'lightIntensity': entry.lightIntensity,
+        'rainLevel': entry.rainLevel,
+        'temperature': entry.temperature,
+        'humidity': entry.humidity,
+        'pressure': entry.pressure,
+        'windSpeed': entry.windSpeed,
+        'windDirection': entry.windDirection,
+        'timestamp': entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    } for entry in weather_data]
+
+    # Trả về dữ liệu dưới dạng bảng HTML
+    return render_template('all_data.html', data=data_dict)
 
 # API route to handle receiving data
 @app.route('/data', methods=['POST'])
@@ -224,6 +339,26 @@ def receive_data():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+@app.route('/clear_data', methods=['POST'])
+def clear_data():
+    try:
+        # Lấy tham số xác nhận từ form (thông qua request.form)
+        confirm = request.form.get('confirm')  
+        
+        if confirm != 'true':
+            return jsonify({"status": "error", "message": "Data deletion not confirmed."}), 400
+
+        # Xóa tất cả dữ liệu trong bảng WeatherData
+        db.session.query(WeatherData).delete()
+        db.session.commit()
+
+        return jsonify({"status": "success", "message": "All data has been deleted."}), 200
+    except Exception as e:
+        db.session.rollback()  # Rollback nếu có lỗi
+        return jsonify({"status": "error", "message": str(e)}), 500
+@app.route('/clear_data_page')
+def clear_data_page():
+    return render_template('clear_data.html')
 
 if __name__ == "__main__":
     df = pd.read_csv("weather.csv", delimiter=",")

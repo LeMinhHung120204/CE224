@@ -5,14 +5,16 @@ from server import app, db, WeatherData  # Import từ server.py để truy cậ
 # Tạo danh sách các trạm
 stations = [f"station{i}" for i in range(1, 6)]
 
-# Hàm sinh dữ liệu ngẫu nhiên và lưu vào cơ sở dữ liệu
-def generate_random_data(start_date, end_date, num_records):
+# Hàm sinh dữ liệu theo thứ tự thời gian và lưu vào cơ sở dữ liệu
+def generate_ordered_data(start_date, end_date, num_records):
     with app.app_context():  # Đảm bảo có app context
-        for _ in range(num_records):
-            # Tạo timestamp ngẫu nhiên trong khoảng thời gian
-            timestamp = start_date + (end_date - start_date) * random.random()
-            # Chuyển đổi timestamp thành đối tượng datetime
-            timestamp = timestamp
+        # Tính toán khoảng thời gian giữa start_date và end_date
+        time_diff = end_date - start_date
+
+        # Tạo ra các timestamp theo thứ tự liên tiếp
+        for i in range(num_records):
+            # Tính toán thời gian theo thứ tự từ start_date, tăng dần theo chỉ số i
+            timestamp = start_date + (time_diff / num_records) * i
 
             # Chọn trạm ngẫu nhiên
             station = random.choice(stations)
@@ -45,11 +47,11 @@ def generate_random_data(start_date, end_date, num_records):
 
         print(f"Đã tạo và lưu {num_records} bản ghi vào cơ sở dữ liệu!")
 
-# Chạy hàm và tạo dữ liệu ngẫu nhiên
+# Chạy hàm và tạo dữ liệu theo thứ tự thời gian
 start_date = datetime.datetime(2022, 1, 1)
 end_date = datetime.datetime(2024, 12, 31)
 
 # Số lượng bản ghi cần tạo
 num_records = 1000
 
-generate_random_data(start_date, end_date, num_records)
+generate_ordered_data(start_date, end_date, num_records)

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear All Data</title>
+</head>
+<body>
+    <h1>Clear All Weather Data</h1>
+    <p>Warning: This action will permanently delete all the data from the database.</p>
+    
+    <form id="clearDataForm" method="POST" action="/clear_data">
+        <button type="button" onclick="confirmDelete()">Clear All Data</button>
+    </form>
+
+    <script>
+        function confirmDelete() {
+            if (confirm("Are you sure you want to delete all data? This action cannot be undone.")) {
+                // Thêm tham số 'confirm=true' vào yêu cầu POST
+                const form = document.getElementById('clearDataForm');
+                const formData = new FormData(form);
+                formData.append('confirm', 'true');  // Thêm tham số 'confirm'
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);  // Hiển thị thông báo
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
