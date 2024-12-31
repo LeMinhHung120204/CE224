@@ -11,12 +11,31 @@ import pandas as pd
 import os
 import glob
 import google.generativeai as genai
-
+from flask_sqlalchemy import SQLAlchemy  # Import SQLAlchemy
+from sqlalchemy import Column, Integer, String, Float, DateTime
+from datetime import datetime
 # Initialize Flask and SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app)
-
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///weather_data.db'  # Tên file SQLite
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)  # Khởi tạo SQLAlchemy
 # Data storage for the web app
+class WeatherData(db.Model):
+    id = Column(Integer, primary_key=True)  # Khóa chính
+    station_name = Column(String(255), nullable=False)  # Tên trạm
+    lightIntensity = Column(Float, nullable=False)
+    rainLevel = Column(Float, nullable=False)
+    temperature = Column(Float, nullable=False)
+    humidity = Column(Float, nullable=False)
+    pressure = Column(Float, nullable=False)
+    windSpeed = Column(Float, nullable=False)
+    windDirection = Column(Float, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)  # Thời gian nhận dữ liệu
+
+# Tạo bảng trong cơ sở dữ liệu
+with app.app_context():
+    db.create_all()
 data = {
     "name": [],
     "lightIntensity": [],
@@ -42,29 +61,34 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe(MQTT_TOPIC)
 
 def on_message(client, userdata, msg):
-    # topic = msg.topic
-    # payload = msg.payload.decode("utf-8")
-    # print(f"Received message '{payload}' on topic '{topic}'")
-
-    payload = msg.payload.decode("utf-8")  # Giải mã payload (dạng chuỗi)
-    payload = payload.split('#')
+    payload = msg.payload.decode("utf-8")  # Giải mã payload
+    payload = payload.split('#')  # Tách dữ liệu từ chuỗi
     features = [
-        "lightIntensity", 
+        "lightIntensity",
         "rainLevel",
         "temperature",
         "humidity",
         "pressure",
         "windSpeed",
-        "windDirection",
-        "rainFlowRate"
+        "windDirection"
     ]
-    data["name"].append(data["name"][-1] + 1)
-    current_date = datetime.now().strftime("%Y-%m-%d")
-    data["month_data"].append(current_date)
-    for i, f in enumerate(features):
-        data[f].append(payload[i])
-    pd.DataFrame(data).to_csv('weather.csv', index=False, mode='a', header=False)
-    
+
+    # Tạo bản ghi mới và lưu vào SQLite
+    new_entry = WeatherData(
+        station_name="station1",
+        lightIntensity=float(payload[0]),
+        rainLevel=float(payload[1]),
+        temperature=float(payload[2]),
+        humidity=float(payload[3]),
+        pressure=float(payload[4]),
+        windSpeed=float(payload[5]),
+        windDirection=float(payload[6])
+    )
+    db.session.add(new_entry)
+    db.session.commit()
+
+    print(f"Data saved to SQLite: {payload}")
+
 
 # Setup MQTT client
 mqtt_client = mqtt.Client()
@@ -85,42 +109,34 @@ def index():
 # Trang biểu đồ
 @app.route('/chart', methods=['GET'])
 def chart():
-    # Lấy tham số từ query string
     station_id = request.args.get('station')
     start_date = request.args.get('start')
     end_date = request.args.get('end')
 
-    print(station_id, start_date, end_date)
-    # Nếu không có tham số, trả về JSON trống
-    # Xóa các file trong thư mục static/charts
-    save_path = "static/charts"
-    if os.path.exists(save_path):
-        files = glob.glob(os.path.join(save_path, "*.png"))
-        for file in files:
-            os.remove(file)  # Xóa từng file .png
+    # Validate input
     if not station_id or not start_date or not end_date:
         return render_template('chart.html')
-    station_id = station_id.split(' ')[1]
-    data = df[df['name'] == int(station_id)].to_dict()
-    print(station_id)
 
-    # Nếu có tham số, xử lý logic để tạo biểu đồ
+    station_id = station_id.split(' ')[1]  # Parse station name
+    filtered_data = df[
+        (df['name'] == int(station_id)) &
+        (df['month_data'] >= start_date) &
+        (df['month_data'] <= end_date)
+    ]
+
+    # Prepare and save charts
     features = ["lightIntensity", "rainLevel", "temperature", "humidity", 
-                "pressure", "windSpeed", "rainFlowRate"]
-    charts = {}
-    save_path = "static/charts"  # Đường dẫn thư mục để lưu biểu đồ
-    os.makedirs(save_path, exist_ok=True)  # Tạo thư mục nếu chưa tồn tại
+                "pressure", "windSpeed"]
+    save_path = "static/charts"
+    os.makedirs(save_path, exist_ok=True)  # Create folder if not exists
 
+    chart_paths = {}
     for feature in features:
-        if feature in data:
-            month_data = data["month_data"]
-            feature_values = data[feature]
+        if feature in filtered_data:
+            labels = filtered_data["month_data"].tolist()
+            values = filtered_data[feature].tolist()
 
-            # Chuyển đổi dữ liệu thành danh sách
-            labels = list(map(str, month_data.values()))
-            values = list(map(float, feature_values.values()))
-
-            # Tạo biểu đồ Matplotlib
+            # Plot chart
             fig, ax = plt.subplots()
             ax.plot(labels, values, marker='o', label=feature, color='blue')
             ax.set_xlabel('Date')
@@ -129,22 +145,16 @@ def chart():
             ax.legend()
             ax.grid()
 
-            # Lưu biểu đồ vào file
-            file_path = os.path.join(save_path, f"{feature}.png")
-            fig.savefig(file_path, format='png')
+            # Save the chart to file
+            file_name = f"{feature}.png"
+            file_path = os.path.join(save_path, file_name)
+            fig.savefig(file_path)
+            plt.close(fig)  # Release memory
 
-            # Mã hóa Base64 để nhúng vào JSON
-            img = io.BytesIO()
-            fig.savefig(img, format='png')
-            img.seek(0)
-            # charts[feature] = base64.b64encode(img.getvalue()).decode('utf-8')
+            chart_paths[feature] = file_name  # Add to response
 
-            #plt.close(fig)  # Giải phóng bộ nhớ
-    print('ábd')
-    # Trả về dữ liệu JSON và lưu biểu đồ
-    return render_template('chart.html')
+    return jsonify(chart_paths), 200
 
-    # return jsonify(charts), 200
 
 @app.after_request
 def add_no_cache_headers(response):
