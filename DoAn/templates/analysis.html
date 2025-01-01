@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/style.css">
+
+    <title>Analysis</title>
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>Navigation</h2>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/chart">Chart</a></li>
+            <li><a class="active" href="/analysis">Analysis</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Title -->
+        <h1 class="analysis-title">Analysis</h1>
+
+        <!-- Filters for station and date range -->
+        <div class="filters-container">
+            <div>
+                <label for="station-select">Select Station:</label>
+                <select id="station-select">
+                    <option value="Station 1">Station 1</option>
+                    <option value="Station 2">Station 2</option>
+                    <option value="Station 3">Station 3</option>
+                    <option value="Station 4">Station 4</option>
+                    <option value="Station 5">Station 5</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date">
+            </div>
+
+            <div>
+                <label for="end-date">End Date:</label>
+                <input type="date" id="end-date">
+            </div>
+
+            <button onclick="loadAnalysis()">Apply</button>
+        </div>
+
+        <!-- Analysis Display -->
+        <div class="analysis-grid">
+            <div class="analysis-container">
+                <h3>Light Intensity Analysis</h3>
+                <p>No data available</p>
+            </div>
+
+            <div class="analysis-container">
+                <h3>Rain Level Analysis</h3>
+                <p>No data available</p>
+            </div>
+
+            <div class="analysis-container">
+                <h3>Temperature Analysis</h3>
+                <p>No data available</p>
+            </div>
+
+            <div class="analysis-container">
+                <h3>Humidity Analysis</h3>
+                <p>No data available</p>
+            </div>
+
+            <div class="analysis-container">
+                <h3>Pressure Analysis</h3>
+                <p>No data available</p>
+            </div>
+
+            <div class="analysis-container">
+                <h3>Wind Speed Analysis</h3>
+                <p>No data available</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadAnalysis() {
+            const selectedStation = document.getElementById("station-select").value;
+            const startDate = document.getElementById("start-date").value;
+            const endDate = document.getElementById("end-date").value;
+
+            // Validate date range
+            if (new Date(startDate) > new Date(endDate)) {
+                alert("Start date cannot be later than end date.");
+                return;
+            }
+
+            // Fetch the analysis data for the selected station and date range
+            fetch(`/analysis?station=${selectedStation}&start=${startDate}&end=${endDate}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Populate the analysis containers with the fetched data
+                    document.querySelector(".analysis-grid").innerHTML = data.map(item => `
+                        <div class="analysis-container">
+                            <h3>${item.title}</h3>
+                            <p>${item.content}</p>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
