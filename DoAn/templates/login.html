@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login and Register</title>
-  <link rel="stylesheet" href="../static/css/style.css">
+  <link rel="stylesheet" href="../static/css/style1.css">
 </head>
 <body>
   <div class="container">
@@ -13,19 +13,21 @@
       <h2>Login</h2>
       <form id="login-form" onsubmit="login(); return false;">
         <div class="input-group">
-          <input type="text" id="username" class="input-field" placeholder="Username" required>
+          <span class="icon">👤</span>
+          <input type="text" id="username" placeholder="Username" required>
         </div>
         <div class="input-group">
-          <input type="password" id="password" class="input-field" placeholder="Password" required>
+          <span class="icon">🔒</span>
+          <input type="password" id="password" placeholder="Password" required>
         </div>
         <div class="options">
-          <label class="checkbox-label">
+          <label>
             <input type="checkbox" id="remember-me"> Remember me
           </label>
           <span class="link forgot-password" onclick="toggleForms('forgot')">Forgot password?</span>
         </div>
         <button type="submit" class="login-button">Login</button>
-        <p>Don't have an account? <span class="link" onclick="toggleForms('register')">Register</span></p>
+        <p>Don't have an account? <span class="link" style="color: blue; cursor: pointer;" onclick="toggleForms('register')">Register</span></p>
       </form>
       <div id="message" class="message"></div>
     </div>
@@ -35,10 +37,11 @@
       <h2>Forgot Password</h2>
       <form id="forgot-form" onsubmit="sendResetCode(); return false;">
         <div class="input-group">
-          <input type="email" id="forgot-email" class="input-field" placeholder="Enter your email" required>
+          <span class="icon">📧</span>
+          <input type="email" id="forgot-email" placeholder="Enter your email" required>
         </div>
         <button type="submit" class="login-button">Send Reset Code</button>
-        <p><span class="link" onclick="toggleForms('login')">Back to Login</span></p>
+        <p><span class="link" style="color: blue; cursor: pointer;" onclick="toggleForms('login')">Back to Login</span></p>
       </form>
       <div id="forgot-message" class="message"></div>
     </div>
@@ -48,25 +51,31 @@
       <h2>Register</h2>
       <form id="register-form" onsubmit="register(); return false;">
         <div class="input-group">
-          <input type="text" id="first-name" class="input-field" placeholder="First Name" required>
+          <span class="icon">👤</span>
+          <input type="text" id="first-name" placeholder="First Name" required>
         </div>
         <div class="input-group">
-          <input type="text" id="last-name" class="input-field" placeholder="Last Name" required>
+          <span class="icon">👤</span>
+          <input type="text" id="last-name" placeholder="Last Name" required>
         </div>
         <div class="input-group">
-          <input type="date" id="birth" class="input-field" placeholder="Birth Date" required>
+          <span class="icon">📅</span>
+          <input type="date" id="birth" placeholder="Birth Date" required>
         </div>
         <div class="input-group">
-          <input type="email" id="email" class="input-field" placeholder="Email" required>
+          <span class="icon">📧</span>
+          <input type="email" id="email" placeholder="Email" required>
         </div>
         <div class="input-group">
-          <input type="password" id="reg-password" class="input-field" placeholder="Password" required>
+          <span class="icon">🔒</span>
+          <input type="password" id="reg-password" placeholder="Password" required>
         </div>
         <div class="input-group">
-          <input type="password" id="confirm-password" class="input-field" placeholder="Confirm Password" required>
+          <span class="icon">🔒</span>
+          <input type="password" id="confirm-password" placeholder="Confirm Password" required>
         </div>
         <button type="submit" class="login-button">Register</button>
-        <p>Already have an account? <span class="link" onclick="toggleForms('login')">Login</span></p>
+        <p>Already have an account? <span class="link" style="color: blue; cursor: pointer;" onclick="toggleForms('login')">Login</span></p>
       </form>
       <div id="register-message" class="message"></div>
     </div>
