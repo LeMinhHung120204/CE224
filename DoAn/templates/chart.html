@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> -->
     <link rel="stylesheet" href="../static/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Chart</title>
@@ -31,11 +30,11 @@
             <div>
                 <label for="station-select">Select Station:</label>
                 <select id="station-select">
-                    <option value="station1">station 1</option>
-                    <option value="station2">station 2</option>
-                    <option value="station3">station 3</option>
-                    <option value="station4">station 4</option>
-                    <option value="station5">station 5</option>
+                    <option value="station1">Station 1</option>
+                    <option value="station2">Station 2</option>
+                    <option value="station3">Station 3</option>
+                    <option value="station4">Station 4</option>
+                    <option value="station5">Station 5</option>
                 </select>
             </div>
 
@@ -56,33 +55,34 @@
         <div class="chart-grid">
             <div class="chart-container">
                 <h3>Light Intensity (lux)</h3>
-                <img id="chart-light-intensity" src="data:image/png;base64,{{ chart_data }}" alt="Light Intensity Chart">
+                <img id="chart-light-intensity" src="../static/images/default_chart.png" alt="Light Intensity Chart">
             </div>
 
             <div class="chart-container">
                 <h3>Rain Level (mm)</h3>
-                <img id="chart-rain-level" src="data:image/png;base64,{{ chart_data }}" alt="Rain Level Chart">
+                <img id="chart-rain-level" src="../static/images/default_chart.png" alt="Rain Level Chart">
             </div>
 
             <div class="chart-container">
                 <h3>Temperature (°C)</h3>
-                <img id="chart-temperature" src="data:image/png;base64,{{ chart_data }}" alt="Temperature Chart">
+                <img id="chart-temperature" src="../static/images/default_chart.png" alt="Temperature Chart">
             </div>
 
             <div class="chart-container">
                 <h3>Humidity (%)</h3>
-                <img id="chart-humidity" src="data:image/png;base64,{{ chart_data }}" alt="Humidity Chart">
+                <img id="chart-humidity" src="../static/images/default_chart.png" alt="Humidity Chart">
             </div>
 
             <div class="chart-container">
                 <h3>Pressure (hPa)</h3>
-                <img id="chart-pressure" src="data:image/png;base64,{{ chart_data }}" alt="Pressure Chart">
+                <img id="chart-pressure" src="../static/images/default_chart.png" alt="Pressure Chart">
             </div>
 
             <div class="chart-container">
                 <h3>Wind Speed (km/h)</h3>
-                <img id="chart-wind-speed" src="data:image/png;base64,{{ chart_data }}" alt="Wind Speed Chart">
+                <img id="chart-wind-speed" src="../static/images/default_chart.png" alt="Wind Speed Chart">
             </div>
+        </div>
     </div>
 
     <script>
@@ -121,8 +121,6 @@
                 });
         }
     </script>
-    
-    
 </body>
 
 </html>

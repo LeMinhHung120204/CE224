@@ -163,42 +163,21 @@ def chart():
     if not station_id or not start_date or not end_date:
         return render_template('chart.html')
 
-    # Handle potential missing space or unexpected format in station_id
-    if ' ' in station_id:
-        station_id = station_id.split(' ')[1]  # Parse station name
-    else:
-        # If no space is found, use the station_id as is (or handle appropriately)
-        pass
-
-    # Convert to datetime
+    # Xử lý dữ liệu đầu vào
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
-    # Debugging output
-    print(f"Filtering data for station: {station_id}")
-    print(f"Start Date: {start_date}, End Date: {end_date}")
-
-    # Query for the station's data
-    station_data = WeatherData.query.filter(WeatherData.station_name == station_id).all()
-
-    if not station_data:
-        return jsonify({"error": "No data found for the selected station."}), 400
-
-    # Debugging: print the timestamps in the data
-    timestamps = [entry.timestamp for entry in station_data]
-    print(f"Available timestamps: {timestamps}")
-
-    # Filter data within the specified range
+    # Lọc dữ liệu từ cơ sở dữ liệu trong khoảng thời gian
     filtered_data = WeatherData.query.filter(
         WeatherData.station_name == station_id,
         WeatherData.timestamp >= start_date,
         WeatherData.timestamp <= end_date
-    ).all()
+    ).order_by(WeatherData.timestamp).all()
 
     if not filtered_data:
         return jsonify({"error": "No data found for the selected date range."}), 400
 
-    # Process and return the charts as before
+    # Chuyển đổi dữ liệu thành DataFrame
     data_dict = [{
         'timestamp': entry.timestamp,
         'lightIntensity': entry.lightIntensity,
@@ -212,42 +191,53 @@ def chart():
 
     station_df = pd.DataFrame(data_dict)
 
-    # Select 10 equally spaced time points within the date range
+    # Nội suy để chọn 10 điểm dữ liệu
+    station_df = station_df.sort_values('timestamp')
     time_points = pd.date_range(start=start_date, end=end_date, periods=10)
-    filtered_data = station_df[station_df['timestamp'].isin(time_points)]
+    station_df = station_df.set_index('timestamp').reindex(time_points, method='nearest').reset_index()
 
-    # Debugging: print filtered data
-    print(f"Filtered data: {filtered_data}")
-
-    # Create charts as before
-    features = ["lightIntensity", "rainLevel", "temperature", "humidity", 
-                "pressure", "windSpeed"]
+    # Tạo biểu đồ và lưu file
+    # Tạo biểu đồ và lưu file
     save_path = "static/charts"
     os.makedirs(save_path, exist_ok=True)
 
     chart_paths = {}
-    for feature in features:
-        if feature in filtered_data:
-            labels = filtered_data["timestamp"].tolist()
-            values = filtered_data[feature].tolist()
+    features = ["lightIntensity", "rainLevel", "temperature", "humidity", 
+                "pressure", "windSpeed"]
 
-            # Generate chart
-            fig, ax = plt.subplots()
+    for feature in features:
+        if feature in station_df:
+            labels = station_df["index"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist()
+            values = station_df[feature].tolist()
+
+            # Tạo biểu đồ
+            fig, ax = plt.subplots(figsize=(10, 4))  # Tăng kích thước chiều ngang của biểu đồ
             ax.plot(labels, values, marker='o', label=feature, color='blue')
+            
+            # Xử lý việc phân bố các mốc thời gian
+            ax.set_xticks(range(len(labels)))  # Cài đặt vị trí cho tất cả các mốc thời gian
+            ax.set_xticklabels(labels, rotation=45)
+
+            # Chia các mốc thời gian thành 2 nhóm (lẻ và chẵn)
+            for i, label in enumerate(labels):
+                if i % 2 == 0:  # mốc thời gian lẻ
+                    ax.text(i, -0.05, label, ha='center', va='top', transform=ax.get_xaxis_transform())  # Hiển thị dưới
+                else:  # mốc thời gian chẵn
+                    ax.text(i, 1.05, label, ha='center', va='bottom', transform=ax.get_xaxis_transform())  # Hiển thị trên
+
             ax.set_xlabel('Date')
             ax.set_ylabel(f'{feature} Value')
             ax.set_title(f'{feature} Over Time')
             ax.legend()
             ax.grid()
 
-            # Save chart image
+            # Lưu biểu đồ
             file_name = f"{feature}.png"
             file_path = os.path.join(save_path, file_name)
             fig.savefig(file_path)
             plt.close(fig)
 
             chart_paths[feature] = file_name
-
     return jsonify(chart_paths), 200
 
 @app.after_request

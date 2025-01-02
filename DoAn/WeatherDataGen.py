@@ -5,17 +5,12 @@ from server import app, db, WeatherData  # Import từ server.py để truy cậ
 # Tạo danh sách các trạm
 stations = [f"station{i}" for i in range(1, 6)]
 
-# Hàm sinh dữ liệu theo thứ tự thời gian và lưu vào cơ sở dữ liệu
-def generate_ordered_data(start_date, end_date, num_records):
+# Hàm sinh dữ liệu mỗi giờ và lưu vào cơ sở dữ liệu
+def generate_hourly_data(start_date, end_date):
     with app.app_context():  # Đảm bảo có app context
-        # Tính toán khoảng thời gian giữa start_date và end_date
-        time_diff = end_date - start_date
+        current_time = start_date
 
-        # Tạo ra các timestamp theo thứ tự liên tiếp
-        for i in range(num_records):
-            # Tính toán thời gian theo thứ tự từ start_date, tăng dần theo chỉ số i
-            timestamp = start_date + (time_diff / num_records) * i
-
+        while current_time <= end_date:
             # Chọn trạm ngẫu nhiên
             station = random.choice(stations)
 
@@ -38,20 +33,20 @@ def generate_ordered_data(start_date, end_date, num_records):
                 pressure=pressure,
                 windSpeed=wind_speed,
                 windDirection=wind_direction,
-                timestamp=timestamp  # Lưu đối tượng datetime
+                timestamp=current_time  # Lưu đối tượng datetime
             )
 
             # Thêm đối tượng vào phiên làm việc và commit để lưu vào DB
             db.session.add(new_entry)
             db.session.commit()
 
-        print(f"Đã tạo và lưu {num_records} bản ghi vào cơ sở dữ liệu!")
+            # Tăng thời gian thêm 1 giờ
+            current_time += datetime.timedelta(hours=1)
 
-# Chạy hàm và tạo dữ liệu theo thứ tự thời gian
+        print(f"Đã tạo và lưu dữ liệu mỗi giờ từ {start_date} đến {end_date} vào cơ sở dữ liệu!")
+
+# Chạy hàm và tạo dữ liệu
 start_date = datetime.datetime(2022, 1, 1)
 end_date = datetime.datetime(2024, 12, 31)
 
-# Số lượng bản ghi cần tạo
-num_records = 1000
-
-generate_ordered_data(start_date, end_date, num_records)
+generate_hourly_data(start_date, end_date)
