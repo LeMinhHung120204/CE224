@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login and Register</title>
-  <link rel="stylesheet" href="../static/css/style1.css">
+  <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
   <div class="container">
@@ -91,17 +91,35 @@
     }
 
     function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      const message = document.getElementById("message");
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const message = document.getElementById("message");
 
-      if (!username || !password) {
-        message.innerHTML = '<span style="color: red;">Please fill in all fields.</span>';
-        return;
-      }
+        if (!username || !password) {
+            message.innerHTML = '<span style="color: red;">Please fill in all fields.</span>';
+            return;
+        }
 
-      message.innerHTML = '<span style="color: green;">Login successful!</span>';
-    }
+        fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        })
+            .then(response => response.json())
+            .then(data => {
+            if (data.error) {
+                message.innerHTML = `<span style="color: red;">${data.error}</span>`;
+            } else {
+                message.innerHTML = '<span style="color: green;">Login successful!</span>';
+                setTimeout(() => window.location.href = "/", 1000);
+            }
+            })
+            .catch(error => {
+            console.error(error);
+            message.innerHTML = '<span style="color: red;">An error occurred. Please try again.</span>';
+            });
+        }
+
 
     function sendResetCode() {
       const email = document.getElementById("forgot-email").value;

@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 import sqlite3
 from datetime import datetime, timedelta
 import threading
@@ -11,11 +11,14 @@ import google.generativeai as genai
 
 
 app = Flask(__name__)
+app.secret_key = "your_secret_key"  # Khóa bảo mật cho session
 
 # Database setup
 def init_db():
     conn = sqlite3.connect('weather_station.db')
     c = conn.cursor()
+
+    # Bảng dữ liệu trạm quan trắc
     c.execute('''CREATE TABLE IF NOT EXISTS station_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     station_name TEXT,
@@ -28,6 +31,21 @@ def init_db():
                     wind_direction TEXT,
                     timestamp DATETIME
                 )''')
+
+    # Bảng người dùng
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL
+                )''')
+
+    # Thêm tài khoản admin mặc định nếu chưa có
+    c.execute('SELECT * FROM users WHERE username = "admin"')
+    if not c.fetchone():
+        c.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', 
+                  ("admin", "123322456", "admin"))
+
     conn.commit()
     conn.close()
 
@@ -203,12 +221,44 @@ def chart():
 
     return jsonify(chart_paths), 200
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'error': 'Username and password are required'}), 400
+
+    conn = sqlite3.connect('weather_station.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password))
+    user = c.fetchone()
+    conn.close()
+
+    if user:
+        session['user'] = {'id': user[0], 'username': user[1], 'role': user[3]}
+        return jsonify({'message': 'Login successful'})
+    else:
+        return jsonify({'error': 'Invalid username or password'}), 401
+
+# Logout API
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user', None)
+    return jsonify({'message': 'Logout successful'})
+
 @app.route('/')
 def index():
+    if 'user' not in session:
+        return redirect(url_for('login_page'))
     with lock:
         data = real_time_data.copy()
     return render_template('index.html', data=data)
 
+@app.route('/login-page')
+def login_page():
+    return render_template('login.html')
 @app.route('/all-data', methods=['GET'])
 def all_data():
     # Kết nối tới cơ sở dữ liệu SQLite
