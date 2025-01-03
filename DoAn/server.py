@@ -197,7 +197,6 @@ def chart():
     station_df = station_df.set_index('timestamp').reindex(time_points, method='nearest').reset_index()
 
     # Tạo biểu đồ và lưu file
-    # Tạo biểu đồ và lưu file
     save_path = "static/charts"
     os.makedirs(save_path, exist_ok=True)
 
@@ -211,20 +210,19 @@ def chart():
             values = station_df[feature].tolist()
 
             # Tạo biểu đồ
-            fig, ax = plt.subplots(figsize=(10, 4))  # Tăng kích thước chiều ngang của biểu đồ
+            # Tạo biểu đồ
+            fig, ax = plt.subplots(figsize=(12, 8))  # Tăng chiều cao để tránh bị cắt
             ax.plot(labels, values, marker='o', label=feature, color='blue')
-            
-            # Xử lý việc phân bố các mốc thời gian
-            ax.set_xticks(range(len(labels)))  # Cài đặt vị trí cho tất cả các mốc thời gian
-            ax.set_xticklabels(labels, rotation=45)
 
-            # Chia các mốc thời gian thành 2 nhóm (lẻ và chẵn)
-            for i, label in enumerate(labels):
-                if i % 2 == 0:  # mốc thời gian lẻ
-                    ax.text(i, -0.05, label, ha='center', va='top', transform=ax.get_xaxis_transform())  # Hiển thị dưới
-                else:  # mốc thời gian chẵn
-                    ax.text(i, 1.05, label, ha='center', va='bottom', transform=ax.get_xaxis_transform())  # Hiển thị trên
+            # Xử lý việc hiển thị các mốc thời gian
+            ax.set_xticks(range(len(labels)))
+            ax.set_xticklabels(labels, rotation=45, ha='right')  # Nghiêng mốc thời gian 45 độ
 
+            # Tăng khoảng trống bên dưới biểu đồ
+            # plt.tight_layout()  # Tự động điều chỉnh khoảng cách
+            # Hoặc dùng:
+            # plt.subplots_adjust(bottom=0.3)  # Tăng khoảng cách phía dưới trục x
+            plt.subplots_adjust(bottom=0.25)
             ax.set_xlabel('Date')
             ax.set_ylabel(f'{feature} Value')
             ax.set_title(f'{feature} Over Time')
@@ -237,7 +235,9 @@ def chart():
             fig.savefig(file_path)
             plt.close(fig)
 
+
             chart_paths[feature] = file_name
+
     return jsonify(chart_paths), 200
 
 @app.after_request
@@ -247,32 +247,45 @@ def add_no_cache_headers(response):
     response.headers['Expires'] = '0'
     return response
 
-# Trang phân tích dữ liệu
+
 @app.route('/analysis')
 def analysis():
     month = request.args.get('month')
     year = request.args.get('year')
+
     if month is None or year is None:
         file_path = "static/output_analysis.txt"
         with open(file_path, "w", encoding="utf-8") as file:
             file.write('')
         return render_template('analysis.html')
-    # Phân tích theo tháng-năm
-    if month == 'All Months':
-        temp = df[df['month_data'].str.contains(year)]
-    else:
-        temp = df[df['month_data'].str.contains(f"{year}-{month}")]
+
+    # Chuyển đổi tháng và năm sang khoảng thời gian
+    start_date = datetime.strptime(f"{year}-{month}-01", "%Y-%m-%d") if month != 'all' else datetime.strptime(f"{year}-01-01", "%Y-%m-%d")
+    end_date = datetime.strptime(f"{year}-{month}-28", "%Y-%m-%d") if month != 'all' else datetime.strptime(f"{year}-12-31", "%Y-%m-%d")
+
+    # Truy vấn dữ liệu từ SQL
+    filtered_data = WeatherData.query.filter(
+        WeatherData.timestamp >= start_date,
+        WeatherData.timestamp <= end_date
+    ).all()
+
+    if not filtered_data:
+        return jsonify({"error": "No data found for the selected month and year."}), 400
+
+    # Chuyển dữ liệu thành dictionary để xử lý
+    data_dict = [entry.__dict__ for entry in filtered_data]
+
+    # Gửi dữ liệu cho GenAI để phân tích
     genai.configure(api_key="AIzaSyAm8V4F1i_oeF9PCfjwin0gUrfHcRxcV8Q")
     model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content(f"Analyze the weather data of the station: {temp.to_string()}", )
-    print(response.text)
-
-        # Lưu nội dung trả về vào file .txt
-    output_text = response.text
+    response = model.generate_content(f"Analyze the weather data of the station: {data_dict}")
+    # Lưu kết quả phân tích vào file
     file_path = "static/output_analysis.txt"
     with open(file_path, "w", encoding="utf-8") as file:
-        file.write(output_text)
+        file.write(response.text)
+
     return render_template('analysis.html')
+
 
 @app.route('/all_data')
 def all_data():

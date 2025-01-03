@@ -46,7 +46,7 @@ def generate_hourly_data(start_date, end_date):
         print(f"Đã tạo và lưu dữ liệu mỗi giờ từ {start_date} đến {end_date} vào cơ sở dữ liệu!")
 
 # Chạy hàm và tạo dữ liệu
-start_date = datetime.datetime(2022, 1, 1)
-end_date = datetime.datetime(2024, 12, 31)
+start_date = datetime.datetime(2025, 1, 1)
+end_date = datetime.datetime(2025, 12, 31)
 
 generate_hourly_data(start_date, end_date)

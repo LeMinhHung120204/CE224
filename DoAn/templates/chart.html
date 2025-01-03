@@ -53,36 +53,32 @@
 
         <!-- Chart Display -->
         <div class="chart-grid">
-            <div class="chart-container">
+            <div class="chart-container hidden">
                 <h3>Light Intensity (lux)</h3>
                 <img id="chart-light-intensity" src="../static/images/default_chart.png" alt="Light Intensity Chart">
             </div>
-
-            <div class="chart-container">
+            <div class="chart-container hidden">
                 <h3>Rain Level (mm)</h3>
                 <img id="chart-rain-level" src="../static/images/default_chart.png" alt="Rain Level Chart">
             </div>
-
-            <div class="chart-container">
+            <div class="chart-container hidden">
                 <h3>Temperature (°C)</h3>
                 <img id="chart-temperature" src="../static/images/default_chart.png" alt="Temperature Chart">
             </div>
-
-            <div class="chart-container">
+            <div class="chart-container hidden">
                 <h3>Humidity (%)</h3>
                 <img id="chart-humidity" src="../static/images/default_chart.png" alt="Humidity Chart">
             </div>
-
-            <div class="chart-container">
+            <div class="chart-container hidden">
                 <h3>Pressure (hPa)</h3>
                 <img id="chart-pressure" src="../static/images/default_chart.png" alt="Pressure Chart">
             </div>
-
-            <div class="chart-container">
+            <div class="chart-container hidden">
                 <h3>Wind Speed (km/h)</h3>
                 <img id="chart-wind-speed" src="../static/images/default_chart.png" alt="Wind Speed Chart">
             </div>
         </div>
+        
     </div>
 
     <script>
@@ -90,13 +86,19 @@
             const selectedStation = document.getElementById("station-select").value;
             const startDate = document.getElementById("start-date").value;
             const endDate = document.getElementById("end-date").value;
-
+    
+            // Check if the user has selected both start and end dates
+            if (!startDate || !endDate) {
+                alert("Please select both a start and an end date.");
+                return;
+            }
+    
             // Validate date range
             if (new Date(startDate) > new Date(endDate)) {
                 alert("Start date cannot be later than end date.");
                 return;
             }
-
+    
             // Fetch the chart data for the selected station and date range
             fetch(`/chart?station=${selectedStation}&start=${startDate}&end=${endDate}`)
                 .then(response => {
@@ -120,7 +122,7 @@
                     alert(error.message);
                 });
         }
-    </script>
+    </script>    
 </body>
 
 </html>
