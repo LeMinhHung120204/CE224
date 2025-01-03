@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Monitoring Station Analysis</title>
-    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> -->
     <link rel="stylesheet" href="../static/css/style.css">
-
 </head>
 <body>
-        
     <!-- Sidebar Navigation -->
     <div class="sidebar">
         <h2>Navigation</h2>
@@ -26,8 +23,16 @@
             <h1 class="text-center mt-4">Weather Monitoring Station Analysis</h1>
             <div class="mt-4">
                 <h3>Choose Analysis Type:</h3>
-                <form id="monthYearForm" class="mb-3">
-                    <label for="month">Month:</label>
+                <form id="monthYearForm" class="mb-3" method="get" action="/analysis">
+                    <label for="stationName">Enter Station Name:</label>
+                    <input 
+                        type="text" 
+                        id="stationName" 
+                        name="stationName" 
+                        class="form-control w-25 d-inline-block" 
+                        placeholder="Ex: station1">
+                    
+                    <label for="month" class="ms-3">Month:</label>
                     <select id="month" name="month" class="form-select w-25 d-inline-block">
                         <option value="all">All Months</option>
                         <option value="1">January</option>
@@ -59,39 +64,34 @@
                 <h4>Analysis Results:</h4>
                 <pre id="resultsContent">Loading...</pre>
             </div>
+        </div>
     </div>
-    
+
     <script>
         // Lấy thẻ datalist
         const yearOptions = document.getElementById("year-options");
-
-        // Lấy năm hiện tại
         const currentYear = new Date().getFullYear();
-
-        // Tạo danh sách các năm từ 2000 đến năm hiện tại
         for (let year = currentYear; year >= 2000; year--) {
             const option = document.createElement("option");
-            option.value = year; // Giá trị của mỗi option
-            yearOptions.appendChild(option); // Thêm option vào datalist
+            option.value = year;
+            yearOptions.appendChild(option);
         }
 
         // Đọc nội dung file .txt từ máy chủ
-    fetch('../static/output_analysis.txt')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            console.log(response);
-            return response.text();
-        })
-        .then(data => {
-            // Hiển thị nội dung file trong thẻ <pre>
-            document.getElementById('resultsContent').textContent = data;
-        })
-        .catch(error => {
-            console.error('Error loading file:', error);
-            document.getElementById('resultsContent').textContent = 'Unable to load analysis results.';
-        });
+        fetch('../static/output_analysis.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('resultsContent').textContent = data;
+            })
+            .catch(error => {
+                console.error('Error loading file:', error);
+                document.getElementById('resultsContent').textContent = 'Unable to load analysis results.';
+            });
     </script>
 </body>
 </html>

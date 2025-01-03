@@ -139,11 +139,15 @@ tr:nth-child(even) {
 /* Grid container for charts */
 .chart-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Two columns */
-  gap: 20px; /* Space between charts */
+  grid-template-columns: 1fr; /* Mỗi hàng có 1 cột */
+  gap: 20px; /* Khoảng cách giữa các biểu đồ */
   justify-items: center;
   margin-top: 20px;
 }
+/* .hidden {
+  display: none;
+} */
+
 
 .chart-container {
   text-align: center;

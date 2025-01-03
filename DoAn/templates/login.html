@@ -1,21 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/css/style.css">
-    <title>Admin Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login and Register</title>
+  <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
-    <h1>Admin Login</h1>
-    <form method="POST" action="/login">
-        <label for="username">Username:</label>
-        <input type="text" name="username" id="username" required>
-        <br>
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required>
-        <br>
-        <button type="submit">Login</button>
-    </form>
+  <div class="container">
+    <!-- Login Form -->
+    <div class="form-container" id="login-container">
+      <h2>Login</h2>
+      <form id="login-form" onsubmit="login(); return false;">
+        <div class="input-group">
+          <span class="icon">👤</span>
+          <input type="text" id="username" placeholder="Username" required>
+        </div>
+        <div class="input-group">
+          <span class="icon">🔒</span>
+          <input type="password" id="password" placeholder="Password" required>
+        </div>
+        <div class="options">
+          <label>
+            <input type="checkbox" id="remember-me"> Remember me
+          </label>
+          <span class="link forgot-password" onclick="toggleForms('forgot')">Forgot password?</span>
+        </div>
+        <button type="submit" class="login-button">Login</button>
+        <p>Don't have an account? <span class="link" style="color: blue; cursor: pointer;" onclick="toggleForms('register')">Register</span></p>
+      </form>
+      <div id="message" class="message"></div>
+    </div>
+
+    <!-- Forgot Password Form -->
+    <div class="form-container hidden" id="forgot-container">
+      <h2>Forgot Password</h2>
+      <form id="forgot-form" onsubmit="sendResetCode(); return false;">
+        <div class="input-group">
+          <span class="icon">📧</span>
+          <input type="email" id="forgot-email" placeholder="Enter your email" required>
+        </div>
+        <button type="submit" class="login-button">Send Reset Code</button>
+        <p><span class="link" style="color: blue; cursor: pointer;" onclick="toggleForms('login')">Back to Login</span></p>
+      </form>
+      <div id="forgot-message" class="message"></div>
+    </div>
+
+    <!-- Register Form -->
+    <div class="form-container hidden" id="register-container">
+      <h2>Register</h2>
+      <form id="register-form" onsubmit="register(); return false;">
+        <div class="input-group">
+          <span class="icon">👤</span>
+          <input type="text" id="first-name" placeholder="First Name" required>
+        </div>
+        <div class="input-group">
+          <span class="icon">👤</span>
+          <input type="text" id="last-name" placeholder="Last Name" required>
+        </div>
+        <div class="input-group">
+          <span class="icon">📅</span>
+          <input type="date" id="birth" placeholder="Birth Date" required>
+        </div>
+        <div class="input-group">
+          <span class="icon">📧</span>
+          <input type="email" id="email" placeholder="Email" required>
+        </div>
+        <div class="input-group">
+          <span class="icon">🔒</span>
+          <input type="password" id="reg-password" placeholder="Password" required>
+        </div>
+        <div class="input-group">
+          <span class="icon">🔒</span>
+          <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+        </div>
+        <button type="submit" class="login-button">Register</button>
+        <p>Already have an account? <span class="link" style="color: blue; cursor: pointer;" onclick="toggleForms('login')">Login</span></p>
+      </form>
+      <div id="register-message" class="message"></div>
+    </div>
+  </div>
+
+  <script>
+    function toggleForms(target) {
+      document.getElementById("login-container").classList.add("hidden");
+      document.getElementById("register-container").classList.add("hidden");
+      document.getElementById("forgot-container").classList.add("hidden");
+
+      document.getElementById(`${target}-container`).classList.remove("hidden");
+    }
+
+    function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const message = document.getElementById("message");
+
+        if (!username || !password) {
+            message.innerHTML = '<span style="color: red;">Please fill in all fields.</span>';
+            return;
+        }
+
+        fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        })
+            .then(response => response.json())
+            .then(data => {
+            if (data.error) {
+                message.innerHTML = `<span style="color: red;">${data.error}</span>`;
+            } else {
+                message.innerHTML = '<span style="color: green;">Login successful!</span>';
+                setTimeout(() => window.location.href = "/", 1000);
+            }
+            })
+            .catch(error => {
+            console.error(error);
+            message.innerHTML = '<span style="color: red;">An error occurred. Please try again.</span>';
+            });
+        }
+
+
+    function sendResetCode() {
+      const email = document.getElementById("forgot-email").value;
+      const forgotMessage = document.getElementById("forgot-message");
+
+      if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        forgotMessage.innerHTML = '<span style="color: red;">Please enter a valid email.</span>';
+        return;
+      }
+
+      forgotMessage.innerHTML = '<span style="color: green;">Password reset instructions sent to your email!</span>';
+    }
+
+    function register() {
+      const firstName = document.getElementById("first-name").value;
+      const lastName = document.getElementById("last-name").value;
+      const birth = document.getElementById("birth").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("reg-password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+      const registerMessage = document.getElementById("register-message");
+
+      if (!firstName || !lastName || !birth || !email || !password || !confirmPassword) {
+        registerMessage.innerHTML = '<span style="color: red;">Please fill in all fields.</span>';
+        return;
+      }
+
+      if (new Date(birth) > new Date()) {
+        registerMessage.innerHTML = '<span style="color: red;">Birth date cannot be in the future.</span>';
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        registerMessage.innerHTML = '<span style="color: red;">Passwords do not match.</span>';
+        return;
+      }
+
+      registerMessage.innerHTML = '<span style="color: green;">Registration successful!</span>';
+    }
+  </script>
 </body>
 </html>
