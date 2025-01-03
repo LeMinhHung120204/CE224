@@ -14,6 +14,13 @@ import google.generativeai as genai
 from flask_sqlalchemy import SQLAlchemy  # Import SQLAlchemy
 from sqlalchemy import Column, Integer, String, Float, DateTime
 from datetime import datetime
+from sqlalchemy import and_, func
+from flask import jsonify
+from datetime import timedelta
+import time
+import threading
+
+
 # Initialize Flask and SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -36,6 +43,17 @@ class WeatherData(db.Model):
 # Tạo bảng trong cơ sở dữ liệu
 with app.app_context():
     db.create_all()
+
+class StationStatus(db.Model):
+    id = Column(Integer, primary_key=True)
+    station_name = Column(String(255), unique=True, nullable=False)  # Tên trạm, duy nhất
+    status = Column(Integer, default=1)  # Trạng thái: 1 - hoạt động, 0 - không hoạt động
+
+# Tạo bảng mới
+with app.app_context():
+    db.create_all()
+
+
 data = {
     "name": [],
     "lightIntensity": [],
@@ -89,6 +107,48 @@ def on_message(client, userdata, msg):
 
     print(f"Data saved to SQLite: {payload}")
 
+def update_station_status():
+    while True:
+        with app.app_context():
+            # Lấy thời gian hiện tại
+            current_time = datetime.utcnow()
+
+            # Lọc các trạm có dữ liệu mới nhất quá 5 phút
+            inactive_stations = db.session.query(WeatherData.station_name).filter(
+                WeatherData.timestamp < current_time - timedelta(minutes=5)
+            ).distinct().all()
+
+            # Đặt trạng thái thành 0 cho các trạm không hoạt động
+            inactive_station_names = [station[0] for station in inactive_stations]
+            db.session.query(StationStatus).filter(StationStatus.station_name.in_(inactive_station_names)).update(
+                {"status": 0}, synchronize_session=False
+            )
+
+            # Đặt trạng thái thành 1 cho các trạm còn hoạt động
+            active_stations = db.session.query(WeatherData.station_name).filter(
+                WeatherData.timestamp >= current_time - timedelta(minutes=5)
+            ).distinct().all()
+            active_station_names = [station[0] for station in active_stations]
+            db.session.query(StationStatus).filter(StationStatus.station_name.in_(active_station_names)).update(
+                {"status": 1}, synchronize_session=False
+            )
+
+            # Thêm các trạm mới vào bảng StationStatus nếu chưa có
+            all_stations = set(active_station_names + inactive_station_names)
+            existing_stations = db.session.query(StationStatus.station_name).all()
+            existing_station_names = {station[0] for station in existing_stations}
+            new_stations = all_stations - existing_station_names
+
+            for station_name in new_stations:
+                db.session.add(StationStatus(station_name=station_name, status=1))
+
+            db.session.commit()
+        
+        # Chạy lại sau mỗi 5 phút
+        time.sleep(300)
+
+# Khởi động luồng kiểm tra trạng thái
+threading.Thread(target=update_station_status, daemon=True).start()
 
 # Setup MQTT client
 mqtt_client = mqtt.Client()
@@ -106,54 +166,6 @@ mqtt_client.loop_start()
 def index():
     return render_template('index.html', data=data)
 
-# Trang biểu đồ
-# @app.route('/chart', methods=['GET'])
-# def chart():
-#     station_id = request.args.get('station')
-#     start_date = request.args.get('start')
-#     end_date = request.args.get('end')
-
-#     # Validate input
-#     if not station_id or not start_date or not end_date:
-#         return render_template('chart.html')
-
-#     station_id = station_id.split(' ')[1]  # Parse station name
-#     filtered_data = df[
-#         (df['name'] == int(station_id)) &
-#         (df['month_data'] >= start_date) &
-#         (df['month_data'] <= end_date)
-#     ]
-
-#     # Prepare and save charts
-#     features = ["lightIntensity", "rainLevel", "temperature", "humidity", 
-#                 "pressure", "windSpeed"]
-#     save_path = "static/charts"
-#     os.makedirs(save_path, exist_ok=True)  # Create folder if not exists
-
-#     chart_paths = {}
-#     for feature in features:
-#         if feature in filtered_data:
-#             labels = filtered_data["month_data"].tolist()
-#             values = filtered_data[feature].tolist()
-
-#             # Plot chart
-#             fig, ax = plt.subplots()
-#             ax.plot(labels, values, marker='o', label=feature, color='blue')
-#             ax.set_xlabel('Date')
-#             ax.set_ylabel(f'{feature} Value')
-#             ax.set_title(f'{feature} Over Time')
-#             ax.legend()
-#             ax.grid()
-
-#             # Save the chart to file
-#             file_name = f"{feature}.png"
-#             file_path = os.path.join(save_path, file_name)
-#             fig.savefig(file_path)
-#             plt.close(fig)  # Release memory
-
-#             chart_paths[feature] = file_name  # Add to response
-
-#     return jsonify(chart_paths), 200
 @app.route('/chart', methods=['GET'])
 def chart():
     station_id = request.args.get('station')
@@ -308,6 +320,20 @@ def all_data():
 
     # Trả về dữ liệu dưới dạng bảng HTML
     return render_template('all_data.html', data=data_dict)
+@app.route('/station_status')
+def station_status():
+    # Query all data from StationStatus table
+    station_data = StationStatus.query.all()
+
+    # Convert data to a list of dictionaries for easier HTML rendering
+    data_dict = [{
+        'id': entry.id,
+        'station_name': entry.station_name,
+        'status': "Active" if entry.status == 1 else "Inactive"
+    } for entry in station_data]
+
+    # Render the station_status.html template with data
+    return render_template('station_status.html', data=data_dict)
 
 # API route to handle receiving data
 @app.route('/data', methods=['POST'])
@@ -362,6 +388,8 @@ def clear_data():
 @app.route('/clear_data_page')
 def clear_data_page():
     return render_template('clear_data.html')
+
+
 
 if __name__ == "__main__":
     df = pd.read_csv("weather.csv", delimiter=",")

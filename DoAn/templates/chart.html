@@ -28,16 +28,9 @@
         <!-- Filters for station and date range -->
         <div class="filters-container">
             <div>
-                <label for="station-select">Select Station:</label>
-                <select id="station-select">
-                    <option value="station1">Station 1</option>
-                    <option value="station2">Station 2</option>
-                    <option value="station3">Station 3</option>
-                    <option value="station4">Station 4</option>
-                    <option value="station5">Station 5</option>
-                </select>
+                <label for="station-input">Enter Station Name:</label>
+                <input type="text" id="station-input" placeholder="Ex: station1" />
             </div>
-
             <div>
                 <label for="start-date">Start Date:</label>
                 <input type="date" id="start-date">
@@ -83,25 +76,29 @@
 
     <script>
         function loadCharts() {
-            const selectedStation = document.getElementById("station-select").value;
+            const selectedStation = document.getElementById("station-input").value; // Lấy tên trạm từ ô nhập liệu
             const startDate = document.getElementById("start-date").value;
             const endDate = document.getElementById("end-date").value;
-    
-            // Check if the user has selected both start and end dates
-            if (!startDate || !endDate) {
-                alert("Please select both a start and an end date.");
+
+            // Kiểm tra nếu người dùng chưa nhập tên trạm, chọn ngày bắt đầu hoặc ngày kết thúc
+            if (!selectedStation || !startDate || !endDate) {
+                alert("Please enter a station name and select both a start and an end date.");
                 return;
             }
-    
-            // Validate date range
+
+            // Kiểm tra dải ngày
             if (new Date(startDate) > new Date(endDate)) {
                 alert("Start date cannot be later than end date.");
                 return;
             }
-    
-            // Fetch the chart data for the selected station and date range
+
+            console.log("Sending request to the server...");
+            console.log(`Selected Station: ${selectedStation}, Start Date: ${startDate}, End Date: ${endDate}`);
+
+            // Gửi yêu cầu fetch tới API để lấy dữ liệu biểu đồ
             fetch(`/chart?station=${selectedStation}&start=${startDate}&end=${endDate}`)
                 .then(response => {
+                    console.log("Response received", response);
                     if (!response.ok) {
                         return response.json().then(error => {
                             throw new Error(error.error || 'Cannot load charts');
@@ -110,19 +107,41 @@
                     return response.json();
                 })
                 .then(data => {
-                    // Update charts
-                    document.getElementById("chart-light-intensity").src = `../static/charts/${data.lightIntensity}`;
-                    document.getElementById("chart-rain-level").src = `../static/charts/${data.rainLevel}`;
-                    document.getElementById("chart-temperature").src = `../static/charts/${data.temperature}`;
-                    document.getElementById("chart-humidity").src = `../static/charts/${data.humidity}`;
-                    document.getElementById("chart-pressure").src = `../static/charts/${data.pressure}`;
-                    document.getElementById("chart-wind-speed").src = `../static/charts/${data.windSpeed}`;
+                    console.log("Chart data received:", data);
+                    // Cập nhật các biểu đồ
+                    if (data.lightIntensity) {
+                        document.getElementById("chart-light-intensity").src = `../static/charts/${data.lightIntensity}`;
+                        document.querySelector(".chart-container.hidden").classList.remove("hidden");
+                    }
+                    if (data.rainLevel) {
+                        document.getElementById("chart-rain-level").src = `../static/charts/${data.rainLevel}`;
+                        document.querySelector(".chart-container.hidden").classList.remove("hidden");
+                    }
+                    if (data.temperature) {
+                        document.getElementById("chart-temperature").src = `../static/charts/${data.temperature}`;
+                        document.querySelector(".chart-container.hidden").classList.remove("hidden");
+                    }
+                    if (data.humidity) {
+                        document.getElementById("chart-humidity").src = `../static/charts/${data.humidity}`;
+                        document.querySelector(".chart-container.hidden").classList.remove("hidden");
+                    }
+                    if (data.pressure) {
+                        document.getElementById("chart-pressure").src = `../static/charts/${data.pressure}`;
+                        document.querySelector(".chart-container.hidden").classList.remove("hidden");
+                    }
+                    if (data.windSpeed) {
+                        document.getElementById("chart-wind-speed").src = `../static/charts/${data.windSpeed}`;
+                        document.querySelector(".chart-container.hidden").classList.remove("hidden");
+                    }
                 })
                 .catch(error => {
+                    console.error("Error loading charts:", error);
                     alert(error.message);
                 });
         }
-    </script>    
+
+    </script>
+       
 </body>
 
 </html>

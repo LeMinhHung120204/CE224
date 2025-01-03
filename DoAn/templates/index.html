@@ -50,43 +50,45 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Mock data for multiple stations
-            const stations = [];
-            for (let i = 1; i <= 100; i++) {
-                stations.push({
-                    name: `Station ${i}`,
-                    lightIntensity: Math.floor(Math.random() * 2000),
-                    rainLevel: Math.floor(Math.random() * 100),
-                    temperature: (Math.random() * 10 + 20).toFixed(1),
-                    humidity: Math.floor(Math.random() * 100),
-                    pressure: Math.floor(Math.random() * 50 + 1000),
-                    windSpeed: Math.floor(Math.random() * 30),
-                    windDirection: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.floor(Math.random() * 8)],
-                    rainFlowRate: Math.floor(Math.random() * 50)
-                });
-            }
-
             const tableBody = document.getElementById("station-table-body");
-
-            // Populate the table
-            stations.forEach(station => {
-                const row = `
-                    <tr>
-                        <td>${station.name}</td>
-                        <td>${station.lightIntensity}</td>
-                        <td>${station.rainLevel}</td>
-                        <td>${station.temperature}</td>
-                        <td>${station.humidity}</td>
-                        <td>${station.pressure}</td>
-                        <td>${station.windSpeed}</td>
-                        <td>${station.windDirection}</td>
-                        <td>${station.rainFlowRate}</td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
+    
+            // Fetch real-time data from the server
+            const fetchData = async () => {
+                try {
+                    const response = await fetch("/data");
+                    const data = await response.json();
+    
+                    // Clear existing rows
+                    tableBody.innerHTML = "";
+    
+                    // Populate the table with real-time data
+                    data.forEach(station => {
+                        const row = `
+                            <tr>
+                                <td>${station.station_name}</td>
+                                <td>${station.light_intensity}</td>
+                                <td>${station.rainfall}</td>
+                                <td>${station.temperature}</td>
+                                <td>${station.humidity}</td>
+                                <td>${station.pressure}</td>
+                                <td>${station.wind_speed}</td>
+                                <td>${station.wind_direction}</td>
+                                <td>${(station.rainfall * 0.1).toFixed(2)}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                }
+            };
+    
+            // Fetch data initially and every 5 seconds
+            fetchData();
+            setInterval(fetchData, 5000);
         });
     </script>
+    
 </body>
 
 </html>
